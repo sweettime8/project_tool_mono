@@ -32,9 +32,6 @@ public class BaseEntity implements Serializable {
     @Column(name = "modify_at")
     private Timestamp modifyAt;
 
-    @Column(name = "last_update")
-    private Timestamp lastUpdate;
-
     @Column(name = "is_deleted")
     private Integer isDeleted;
 }

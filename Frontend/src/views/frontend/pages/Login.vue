@@ -442,7 +442,7 @@ export default {
                             window.location.href = CONFIG.CLIENT_URL;
                             window.$cookies.set("username", response.data.data.data.username, cookiesExpiredTime);
                             window.$cookies.set("accessToken", response.data.data.data.accessToken, cookiesExpiredTime);
-                            window.$cookies.set("roles", response.data.roles, CONFIG.COOKIES_EXPIRED_TIME);
+                            window.$cookies.set("roles", response.data.data.data.roles, CONFIG.COOKIES_EXPIRED_TIME);
                         } else {
                             Swal.fire({
                                 icon: 'error',

@@ -3,18 +3,19 @@ package com.mrd.tool.controller;
 import com.mrd.tool.common.message.MessageContent;
 import com.mrd.tool.common.message.ResponseMessage;
 import com.mrd.tool.entity.Role;
+import com.mrd.tool.entity.RoleObjectPermission;
+import com.mrd.tool.form.role.RoleCreateForm;
+import com.mrd.tool.form.role.RoleUpdateForm;
 import com.mrd.tool.service.RoleService;
 import com.mrd.tool.validate.RoleValidation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -30,10 +31,10 @@ public class RoleController extends BaseController {
     private RoleValidation roleValidation;
 
     @PostMapping
-    public ResponseMessage createRole(final @Valid @RequestBody Map<String, Object> bodyParam) {
+    public ResponseMessage createRole(final @Valid @RequestBody RoleCreateForm form) {
         try {
-            String roleCode = (String) bodyParam.get("roleCode");
-            String roleName = (String) bodyParam.get("roleName");
+            String roleCode = form.getRoleCode();
+            String roleName = form.getRoleName();
 
             Role role = new Role(roleCode, roleName);
             String invalidData = roleValidation.validateRole(role, "INSERT");
@@ -48,18 +49,13 @@ public class RoleController extends BaseController {
                 if (existRole != null) {
                     return new ResponseMessage(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
                             new MessageContent("Role đã tồn tại"));
-                }else {
-                    role.setIsAdmin(0);
-                    role.setCreatedBy(username);
-                    role.setIsDeleted(0);
-                    role.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-                    roleService.save(role);
+                } else {
+                    Role roleCreate = roleService.createRole(form, username);
                     return new ResponseMessage(HttpStatus.CREATED.value(), HttpStatus.CREATED.toString(),
-                            new MessageContent(role));
+                            new MessageContent(roleCreate));
                 }
-
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error("Error to save role >>> " + e.toString());
             return new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.toString(),
                     new MessageContent(HttpStatus.INTERNAL_SERVER_ERROR.toString()));
@@ -68,10 +64,10 @@ public class RoleController extends BaseController {
     }
 
     @PutMapping
-    public ResponseMessage updateRole(final @Valid @RequestBody Map<String, Object> bodyParam) {
+    public ResponseMessage updateRole(final @Valid @RequestBody RoleUpdateForm form) {
         try {
-            String roleCode = (String) bodyParam.get("roleCode");
-            String roleName = (String) bodyParam.get("roleName");
+            String roleCode = form.getRoleCode();
+            String roleName = form.getRoleName();
 
             Role role = new Role(roleCode, roleName);
             String invalidData = roleValidation.validateRole(role, "UPDATE");
@@ -84,16 +80,16 @@ public class RoleController extends BaseController {
                 Role existRole = roleService.findByRoleCode(roleCode);
                 if (existRole == null || (existRole.getIsDeleted() != null && existRole.getIsDeleted() == 1)) {
                     return new ResponseMessage(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(),
-                            new MessageContent( "Không tồn tại Role với roleCode " + roleCode));
-                }else {
+                            new MessageContent("Không tồn tại Role với roleCode " + roleCode));
+                } else {
                     try {
-
-                        if (roleService.update(role)) {
+                        Role updateRole = roleService.updateByRoleCode(form, username);
+                        if (updateRole != null) {
                             return new ResponseMessage(HttpStatus.OK.value(), HttpStatus.OK.toString(),
-                                    new MessageContent(bodyParam));
+                                    new MessageContent(updateRole));
                         } else {
                             return new ResponseMessage(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(),
-                                    new MessageContent(bodyParam));
+                                    new MessageContent(form));
                         }
                     } catch (Exception ex) {
                         LOGGER.error("Error to update role >>> " + ex.toString());
@@ -106,11 +102,43 @@ public class RoleController extends BaseController {
                 }
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error("Error to save role >>> " + e.toString());
             return new ResponseMessage(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.toString(),
                     new MessageContent(HttpStatus.INTERNAL_SERVER_ERROR.toString()));
 
         }
     }
+
+    @GetMapping("/get-role-create-by-user")
+    public ResponseMessage findRoleCreateByUserName() {
+        String username = super.getLoggedInUsername();
+        if (username == null || username.isEmpty()) {
+            return new ResponseMessage(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(),
+                    new MessageContent(null));
+        } else {
+            List<Role> roleList = roleService.findRoleCreateByUsername(username);
+            if (roleList == null || roleList.size() == 0) {
+                return new ResponseMessage(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(),
+                        new MessageContent(null));
+            }
+            return new  ResponseMessage(new MessageContent(roleList));
+        }
+    }
+
+//    @GetMapping("/list-object-of-role")
+//    public ResponseMessage getListObjectOfRole(@RequestParam("roleCode") String roleCode) {
+//        ResponseMessage response = null;
+//
+//        List<RoleObjectPermission> pageList = rolePagePermissionService.findByRoleCode(roleCode);
+//        if (pageList != null && !pageList.isEmpty()) {
+//            response = new ResponseMessage(new MessageContent(pageList));
+//        } else {
+//            response = new ResponseMessage(HttpStatus.OK.value(), Constant.VALIDATION_DATA_NOT_FOUND,
+//                    new MessageContent(HttpStatus.OK.value(), Constant.VALIDATION_DATA_NOT_FOUND,
+//                            "Không tìm thấy Page ứng với roleCode " + roleCode));
+//        }
+//
+//        return response;
+//    }
 }

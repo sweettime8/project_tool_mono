@@ -19,7 +19,7 @@ public class RoleUser extends BaseEntity {
     private String username;
 
     @Column(name = "roleCode")
-    private String role_code;
+    private String rolecode;
 
 
 }

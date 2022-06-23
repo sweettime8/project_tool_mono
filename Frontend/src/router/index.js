@@ -36,11 +36,19 @@ export default new Router({
     //admin
     {
       path: '/admin',
-      name: 'default',
+      name: 'dashboards',
       meta: {
         authRequired: true,
       },
       component: () => import('@/views/admin/dashboards'),
+    },
+    {
+      path: '/admin/role',
+      name: 'role',
+      meta: {
+        authRequired: true,
+      },
+      component: () => import('@/views/admin/role'),
     },
 
     //=============== router For tools =======

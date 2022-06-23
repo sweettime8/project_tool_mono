@@ -27,6 +27,20 @@ public class RoleRepositoryCustom {
         this.sessionFactory = factory.unwrap(SessionFactory.class);
     }
 
+    public int updateRole(String roleCode, String roleName){
+        Session session = openSession();
+        String sql = "UPDATE t_role SET ";
+        try {
+            return 1;
+        } catch (EntityNotFoundException ex) {
+            session.getTransaction().rollback();
+            LOGGER.error(ex.toString());
+        } finally {
+            closeSession(session);
+        }
+        return 0;
+    }
+
     public boolean updateRoleCode(String newRoleCode, String newRoleDetail, String roleCodeOld) {
         Session session = openSession();
         try {

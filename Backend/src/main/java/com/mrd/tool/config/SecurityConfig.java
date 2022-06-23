@@ -1,5 +1,6 @@
 package com.mrd.tool.config;
 
+import com.mrd.tool.auth.jwt.JwtAuthenticationFilter;
 import com.mrd.tool.service.impl.AuthServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -78,6 +79,20 @@ public class JwtTokenProvider {
         }
         return null;
     }
+
+//    public static void main(String[] args) {
+//        try {
+//            String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhpZXVudDg5QGZzb2Z0LmNvbS52biIsImp0aSI6ImYwOTRkNjI4LTBkNzAtNDVkNC05ZTk2LWFhYzFjNzg0NGI4NyIsImV4cCI6MTY1NTkwNjExMywiaXNzIjoiU0tVRUNPU1lTVEVNIiwiYXVkIjoiU0tVRUNPU1lTVEVNIn0.I7QoMGT2ao7yU9Mt8THLqhrkt7vZX1Y-gR2zfS6RlIE";
+//            String[] chunks = token.split("\\.");
+//            Base64.Decoder decoder = Base64.getUrlDecoder();
+//            String header = new String(decoder.decode(chunks[0]));
+//            String payload = new String(decoder.decode(chunks[1]));
+//            System.out.println(header);
+//            System.out.println(payload);
+//        } catch (Exception ex) {
+//            LOGGER.info(ex.toString());
+//        }
+//    }
 
     public String getUuidFromJWT(String token) {
         Claims claims = Jwts.parser()

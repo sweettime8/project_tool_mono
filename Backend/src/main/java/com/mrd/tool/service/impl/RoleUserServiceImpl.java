@@ -2,7 +2,11 @@ package com.mrd.tool.service.impl;
 
 import com.mrd.tool.entity.Role;
 import com.mrd.tool.entity.RoleUser;
+import com.mrd.tool.repository.RoleUserRepository;
 import com.mrd.tool.service.RoleUserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,9 +14,20 @@ import java.util.Optional;
 
 @Service
 public class RoleUserServiceImpl implements RoleUserService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoleUserServiceImpl.class);
+
+    @Autowired
+    private RoleUserRepository roleUserRepository;
+
     @Override
-    public List<RoleUser> findByUuidUser(String uuidUser) {
-        return null;
+    public List<RoleUser> findByUuidUser(String username) {
+        List<RoleUser> roleUserList = null;
+        try {
+            roleUserList = roleUserRepository.findByUsernameAndAndIsDeleted(username, 0);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return roleUserList;
     }
 
     @Override

@@ -6,9 +6,11 @@ import com.mrd.tool.common.message.MessageContent;
 import com.mrd.tool.common.message.ResponseMessage;
 import com.mrd.tool.auth.jwt.JWTutils;
 import com.mrd.tool.constants.CommonConstants;
+import com.mrd.tool.entity.RoleUser;
 import com.mrd.tool.entity.User;
 import com.mrd.tool.entity.dto.AuthorizationResponseDTO;
 import com.mrd.tool.service.AuthService;
+import com.mrd.tool.service.RoleUserService;
 import com.mrd.tool.service.UserService;
 import com.mrd.tool.validate.UserValidation;
 import org.slf4j.Logger;
@@ -45,6 +47,9 @@ public class AuthenController extends BaseController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private RoleUserService roleUserService;
 
     @PostMapping("/login")
     public ResponseMessage userLogin(final @Valid @RequestBody Map<String,Object> bodyParam) {
@@ -90,7 +95,11 @@ public class AuthenController extends BaseController {
                             String accessJwt = tokenProvider.generateToken(userDetails);
                             String refreshJwt = tokenProvider.createToken(userDetails.getUser().getUuid());
 
+                            List<RoleUser> roleUser = roleUserService.findByUuidUser(userDetails.getUser().getUserName());
                             List<String> roles = new ArrayList<>();
+                            for(RoleUser r : roleUser){
+                                roles.add(r.getRolecode());
+                            }
                             AuthorizationResponseDTO responseDTO = new AuthorizationResponseDTO(userDetails, accessJwt, refreshJwt,roles);
 
                             response = new ResponseMessage(new MessageContent(responseDTO));

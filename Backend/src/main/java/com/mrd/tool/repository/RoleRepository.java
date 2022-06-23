@@ -14,11 +14,13 @@ import java.util.List;
 public interface RoleRepository extends CrudRepository<Role, Long> {
     Role findByRoleCode(String roleCode);
 
+    List<Role> findByCreatedByAndIsDeleted(String username, Integer isDeleted);
+
     Role findByRoleCodeOrRoleName(String roleCode, String roleName);
 
     List<Role> findByIsDeletedNot(Integer isDelete);
 
-    @Transactional
+    @Transactional()
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Role r SET r.roleName = :roleName WHERE r.roleCode = :roleCode")
     int updateRole(@Param("roleCode") String roleCode, @Param("roleName") String roleName);

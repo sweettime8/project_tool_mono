@@ -2,12 +2,13 @@ package com.mrd.tool.service;
 
 import com.mrd.tool.entity.Role;
 import com.mrd.tool.entity.RoleUser;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface RoleUserService {
-    List<RoleUser> findByUuidUser(String uuidUser);
+    List<RoleUser> findByUuidUser(String username);
 
     List<RoleUser> findByRoleCode(Role roleCode);
 

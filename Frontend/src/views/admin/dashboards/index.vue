@@ -147,8 +147,6 @@ export default {
       this.showModal = true;
     }, 1500);
 
-    
-
   },
 };
 </script>
