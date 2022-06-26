@@ -1,65 +1,134 @@
 package com.mrd.tool.config;
 
-import com.mrd.tool.auth.jwt.JwtAuthenticationFilter;
-import com.mrd.tool.service.impl.AuthServiceImpl;
+import com.mrd.tool.auth.jwt.JwtRequestFilter;
+import com.mrd.tool.service.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.BeanIds;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
+import org.springframework.security.web.firewall.DefaultHttpFirewall;
+import org.springframework.security.web.firewall.HttpFirewall;
 
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    @Autowired
-    private AuthServiceImpl userService;
+    private JwtAuthenticationEntrypoint jwtAuthenticationEntryPoint;
 
-    @Bean(BeanIds.AUTHENTICATION_MANAGER)
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        // Get AuthenticationManager Bean
-        return super.authenticationManagerBean();
+    private SecurityService securityService;
+
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
+
+    /**
+     * Default constructor.
+     *
+     * @param pJwtAuthenticationEntryPoint JwtAuthenticationEntryPoint
+     * @param pSecurityService             SecurityService
+     */
+    public SecurityConfig(
+            final JwtAuthenticationEntrypoint pJwtAuthenticationEntryPoint,
+            final SecurityService pSecurityService) {
+        this.jwtAuthenticationEntryPoint = pJwtAuthenticationEntryPoint;
+        this.securityService = pSecurityService;
     }
 
+    /**
+     * Config global.
+     *
+     * @param auth AuthenticationManagerBuilder
+     * @throws Exception when error
+     */
+    @Autowired
+    public void configureGlobal(final AuthenticationManagerBuilder auth)
+            throws Exception {
+        // configure AuthenticationManager so that it knows from where to load
+        // user for matching credentials
+        // Use BCryptPasswordEncoder
+        auth.userDetailsService(securityService)
+                .passwordEncoder(passwordEncoder());
+    }
+
+    /**
+     * Password Encoder bean.
+     *
+     * @return BCryptPasswordEncoder password encoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Password encoder, để Spring Security sử dụng mã hóa mật khẩu người dùng
         return new BCryptPasswordEncoder();
     }
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth)
-            throws Exception {
-        auth.userDetailsService(userService) // Cung cáp userservice cho spring security
-                .passwordEncoder(passwordEncoder()); // cung cấp password encoder
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests().antMatchers("/*", "/**").permitAll() // Không authen những url này
-                .anyRequest().authenticated();
-        http.cors(); // Mở CORS
-        http.csrf().disable(); // Disable CSRF
-
-    }
-
+    /**
+     * AuthenticationManager.
+     * @return AuthenticationManager
+     * @throws Exception when error
+     */
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
     }
+
+    /**
+     * DaoAuthenticationProvider bean.
+     *
+     * @return DaoAuthenticationProvider dao authentication provider
+     */
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider
+                = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(securityService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+
+    /**
+     * Configure.
+     * @param httpSecurity HttpSecurity
+     * @throws Exception when error
+     */
+    @Override
+    protected void configure(final HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
+                .cors().disable()
+                .csrf().disable()
+                .authorizeRequests()
+                .anyRequest().permitAll().and()
+                .exceptionHandling()
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    }
+
+    /**
+     * configure.
+     * @param web WebSecurity
+     * @throws Exception when error
+     */
+    @Override
+    public void configure(final WebSecurity web) throws Exception {
+        super.configure(web);
+        web.httpFirewall(defaultHttpFirewall());
+    }
+
+    /**
+     * http firewall
+     *
+     * @return
+     */
+    @Bean
+    public HttpFirewall defaultHttpFirewall() {
+        return new DefaultHttpFirewall();
+    }
+
 }
